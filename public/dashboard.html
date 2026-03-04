@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HorizonNet Dashboard</title>
+  <link rel="icon" type="image/png" href="/site-icon.png" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      width: 220px;
+      background: #1e293b;
+      border-right: 1px solid #334155;
+      display: flex;
+      flex-direction: column;
+      padding: 28px 0;
+      z-index: 100;
+    }
+    .sidebar-logo {
+      padding: 0 24px 28px;
+      border-bottom: 1px solid #334155;
+      margin-bottom: 16px;
+    }
+    .sidebar-logo h2 { font-size: 16px; font-weight: 700; color: #f1f5f9; }
+    .sidebar-logo p { font-size: 11px; color: #64748b; margin-top: 2px; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 24px;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      border-left: 3px solid transparent;
+      transition: all 0.15s;
+    }
+    .nav-item:hover { color: #f1f5f9; background: #273549; }
+    .nav-item.active { color: #f97316; border-left-color: #e8610a; background: #1a1500; }
+    .nav-item .icon { font-size: 16px; }
+
+    .sidebar-bottom {
+      margin-top: auto;
+      padding: 0 24px;
+    }
+    .logout-btn {
+      width: 100%;
+      padding: 10px;
+      background: transparent;
+      border: 1px solid #334155;
+      color: #64748b;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .logout-btn:hover { border-color: #ef4444; color: #ef4444; }
+
+    /* Main content */
+    .main {
+      margin-left: 220px;
+      padding: 32px 36px;
+      min-height: 100vh;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .page-header {
+      margin-bottom: 28px;
+    }
+    .page-header h1 { font-size: 22px; font-weight: 700; color: #f1f5f9; }
+    .page-header p { font-size: 14px; color: #64748b; margin-top: 4px; }
+
+    /* Stats row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .stat-card .label { font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-card .value { font-size: 28px; font-weight: 700; color: #f1f5f9; margin-top: 6px; }
+    .stat-card .sub { font-size: 12px; color: #64748b; margin-top: 2px; }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .search-input {
+      flex: 1;
+      min-width: 200px;
+      padding: 10px 14px;
+      background: #1e293b;
+      border: 1.5px solid #334155;
+      border-radius: 8px;
+      color: #f1f5f9;
+      font-size: 14px;
+    }
+    .search-input:focus { outline: none; border-color: #3b82f6; }
+    .search-input::placeholder { color: #475569; }
+
+    select {
+      padding: 10px 14px;
+      background: #1e293b;
+      border: 1.5px solid #334155;
+      border-radius: 8px;
+      color: #f1f5f9;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    select:focus { outline: none; border-color: #3b82f6; }
+
+    .btn-primary {
+      padding: 10px 18px;
+      background: #e8610a;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-primary:hover { background: #c9520a; }
+
+    /* Table */
+    .table-wrap {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      background: #162032;
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid #334155;
+    }
+    tbody tr { border-bottom: 1px solid #1e3a5f22; transition: background 0.1s; }
+    tbody tr:hover { background: #162032; }
+    tbody tr:last-child { border-bottom: none; }
+    td {
+      padding: 13px 16px;
+      font-size: 14px;
+      color: #cbd5e1;
+    }
+
+    /* Tag badge */
+    .tag-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    /* Log entries */
+    .log-entry {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .log-entry .status-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .log-entry.found .status-dot { background: #22c55e; }
+    .log-entry.not-found .status-dot { background: #ef4444; }
+    .log-entry .info { flex: 1; }
+    .log-entry .name { font-weight: 600; color: #f1f5f9; font-size: 15px; }
+    .log-entry .meta { font-size: 12px; color: #64748b; margin-top: 3px; }
+    .log-entry .code-badge {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-family: monospace;
+      font-size: 14px;
+      color: #38bdf8;
+    }
+    .log-entry .time { font-size: 12px; color: #475569; }
+
+    /* Enrollment cards */
+    .enroll-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .enroll-card .info { flex: 1; }
+    .enroll-card .enroll-name { font-weight: 600; color: #f1f5f9; font-size: 15px; }
+    .enroll-card .enroll-meta { font-size: 13px; color: #64748b; margin-top: 3px; }
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .status-badge.pending { background: #78350f; color: #fcd34d; }
+    .status-badge.contacted { background: #1e3a5f; color: #60a5fa; }
+    .status-badge.enrolled { background: #14532d; color: #86efac; }
+    .action-btns { display: flex; gap: 8px; }
+    .btn-sm {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-contact { background: #1e3a5f; color: #60a5fa; }
+    .btn-enrolled { background: #14532d; color: #86efac; }
+
+    /* Add customer modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 36px;
+      width: 100%;
+      max-width: 420px;
+    }
+    .modal h3 { font-size: 18px; font-weight: 700; color: #f1f5f9; margin-bottom: 20px; }
+    .modal label { display: block; font-size: 13px; color: #94a3b8; margin-bottom: 5px; font-weight: 600; }
+    .modal input, .modal select {
+      width: 100%;
+      padding: 10px 14px;
+      background: #0f172a;
+      border: 1.5px solid #334155;
+      border-radius: 8px;
+      color: #f1f5f9;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    .modal-btns { display: flex; gap: 10px; margin-top: 4px; }
+    .btn-cancel { flex: 1; padding: 11px; background: #334155; color: #94a3b8; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
+
+    .empty-state { text-align: center; padding: 48px; color: #475569; }
+    .empty-state .emoji { font-size: 36px; margin-bottom: 12px; }
+
+    .badge-count {
+      background: #3b82f6;
+      color: white;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 1px 7px;
+      margin-left: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <img src="/horizon-net-logo.png" alt="HorizonNet" style="max-width:160px;width:100%;margin-bottom:6px;" />
+    <p style="font-size:11px;color:#64748b;">Verification Dashboard</p>
+  </div>
+  <div class="nav-item active" data-page="overview"><span class="icon">📊</span> Overview</div>
+  <div class="nav-item" data-page="customers"><span class="icon">👥</span> Customers</div>
+  <div class="nav-item" data-page="activity"><span class="icon">📋</span> Activity Log</div>
+  <div class="nav-item" data-page="enrollments"><span class="icon">📝</span> Enrollments <span class="badge-count" id="enroll-badge"></span></div>
+  <div class="sidebar-bottom">
+    <button class="logout-btn" id="logout-btn">Sign Out</button>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- Overview -->
+  <div class="page active" id="page-overview">
+    <div class="page-header">
+      <h1>Overview</h1>
+      <p>Welcome back. Here's a snapshot of your verification system.</p>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="label">Total Customers</div>
+        <div class="value" id="stat-total">—</div>
+        <div class="sub">in your database</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Account Tags</div>
+        <div class="value" id="stat-tags">—</div>
+        <div class="sub">Gmail accounts</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Verifications</div>
+        <div class="value" id="stat-verifications">—</div>
+        <div class="sub">total submitted</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Pending Enrollments</div>
+        <div class="value" id="stat-enrollments">—</div>
+        <div class="sub">awaiting follow-up</div>
+      </div>
+    </div>
+
+    <div class="page-header" style="margin-top:8px;">
+      <h1 style="font-size:17px;">Recent Activity</h1>
+    </div>
+    <div id="overview-log"></div>
+  </div>
+
+  <!-- Customers -->
+  <div class="page" id="page-customers">
+    <div class="page-header">
+      <h1>Customer Database</h1>
+      <p>Search and manage all customers in your system.</p>
+    </div>
+    <div class="controls">
+      <input type="text" class="search-input" id="customer-search" placeholder="Search by name..." />
+      <select id="tag-filter"><option value="">All Tags</option></select>
+      <button class="btn-primary" id="add-customer-btn">+ Add Customer</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Customer Name</th>
+            <th>Tag</th>
+            <th>Gmail Account</th>
+          </tr>
+        </thead>
+        <tbody id="customers-tbody"></tbody>
+      </table>
+    </div>
+    <div id="customer-count" style="font-size:13px;color:#475569;margin-top:12px;"></div>
+  </div>
+
+  <!-- Activity Log -->
+  <div class="page" id="page-activity">
+    <div class="page-header">
+      <h1>Activity Log</h1>
+      <p>All verification attempts submitted through the public page.</p>
+    </div>
+    <div id="activity-list"></div>
+  </div>
+
+  <!-- Enrollments -->
+  <div class="page" id="page-enrollments">
+    <div class="page-header">
+      <h1>Enrollment Requests</h1>
+      <p>Customers who submitted a request to be added to your system.</p>
+    </div>
+    <div id="enrollment-list"></div>
+  </div>
+
+</div>
+
+<!-- Add Customer Modal -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <h3>Add New Customer</h3>
+    <label>Full Name</label>
+    <input type="text" id="new-name" placeholder="Customer name" />
+    <label>Tag</label>
+    <select id="new-tag"></select>
+    <label>Gmail Account</label>
+    <input type="text" id="new-gmail" placeholder="(auto-filled based on tag)" readonly />
+    <div class="modal-btns">
+      <button class="btn-cancel" id="modal-cancel">Cancel</button>
+      <button class="btn-primary" id="modal-save" style="flex:1;">Save Customer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Tag color palette
+  const TAG_COLORS = [
+    ['#dcfce7','#166534'],['#fef9c3','#854d0e'],['#fee2e2','#991b1b'],
+    ['#dbeafe','#1e40af'],['#f3e8ff','#6b21a8'],['#fce7f3','#9d174d'],
+    ['#e0f2fe','#0c4a6e'],['#d1fae5','#065f46'],['#fef3c7','#78350f'],
+    ['#ede9fe','#4c1d95'],
+  ];
+  let tagColorMap = {};
+
+  function tagBadge(tag) {
+    if (!tagColorMap[tag]) return `<span class="tag-badge" style="background:#334155;color:#94a3b8">${tag}</span>`;
+    const [bg, text] = tagColorMap[tag];
+    return `<span class="tag-badge" style="background:${bg};color:${text}">${tag}</span>`;
+  }
+
+  function timeAgo(iso) {
+    const diff = Date.now() - new Date(iso).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return 'just now';
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    return `${Math.floor(h/24)}d ago`;
+  }
+
+  // Nav
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      item.classList.add('active');
+      document.getElementById('page-' + item.dataset.page).classList.add('active');
+      if (item.dataset.page === 'customers') loadCustomers();
+      if (item.dataset.page === 'activity') loadActivity();
+      if (item.dataset.page === 'enrollments') loadEnrollments();
+    });
+  });
+
+  // Logout
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    await fetch('/api/logout', { method: 'POST' });
+    window.location.href = '/login';
+  });
+
+  // ---- OVERVIEW ----
+  async function loadOverview() {
+    const [customers, tags, log, enrollments] = await Promise.all([
+      fetch('/api/customers').then(r => r.json()),
+      fetch('/api/tags').then(r => r.json()),
+      fetch('/api/verify-log').then(r => r.json()),
+      fetch('/api/enrollments').then(r => r.json()),
+    ]);
+
+    // Assign tag colors
+    tags.forEach((t, i) => { tagColorMap[t] = TAG_COLORS[i % TAG_COLORS.length]; });
+
+    document.getElementById('stat-total').textContent = customers.length;
+    document.getElementById('stat-tags').textContent = tags.length;
+    document.getElementById('stat-verifications').textContent = log.length;
+    const pending = enrollments.filter(e => e.status === 'pending').length;
+    document.getElementById('stat-enrollments').textContent = pending;
+    if (pending > 0) document.getElementById('enroll-badge').textContent = pending;
+
+    // Recent activity
+    const container = document.getElementById('overview-log');
+    if (log.length === 0) {
+      container.innerHTML = `<div class="empty-state"><div class="emoji">📭</div>No verification attempts yet.</div>`;
+      return;
+    }
+    container.innerHTML = log.slice(0, 8).map(entry => `
+      <div class="log-entry ${entry.found ? 'found' : 'not-found'}">
+        <div class="status-dot"></div>
+        <div class="info">
+          <div class="name">${entry.submittedName} ${entry.found ? tagBadge(entry.tag) : '<span style="color:#ef4444;font-size:12px;">Not found</span>'}</div>
+          <div class="meta">${entry.found ? entry.gmail : 'Customer not in system'}</div>
+        </div>
+        <div class="code-badge">${entry.code}</div>
+        <div class="time">${timeAgo(entry.timestamp)}</div>
+      </div>
+    `).join('');
+  }
+
+  // ---- CUSTOMERS ----
+  let allCustomers = [];
+  let allTags = [];
+
+  async function loadCustomers() {
+    if (allTags.length === 0) {
+      allTags = await fetch('/api/tags').then(r => r.json());
+      const sel = document.getElementById('tag-filter');
+      allTags.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t; opt.textContent = t;
+        sel.appendChild(opt);
+      });
+      const newTagSel = document.getElementById('new-tag');
+      allTags.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t; opt.textContent = t;
+        newTagSel.appendChild(opt);
+      });
+    }
+    allCustomers = await fetch('/api/customers').then(r => r.json());
+    renderCustomers(allCustomers);
+  }
+
+  function renderCustomers(list) {
+    const tbody = document.getElementById('customers-tbody');
+    if (list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:32px;color:#475569;">No customers found.</td></tr>`;
+      document.getElementById('customer-count').textContent = '';
+      return;
+    }
+    tbody.innerHTML = list.map((c, i) => `
+      <tr>
+        <td style="color:#475569">${i + 1}</td>
+        <td style="font-weight:600;color:#f1f5f9">${c.name}</td>
+        <td>${tagBadge(c.tag)}</td>
+        <td style="color:#60a5fa">${c.gmail}</td>
+      </tr>
+    `).join('');
+    document.getElementById('customer-count').textContent = `Showing ${list.length} of ${allCustomers.length} customers`;
+  }
+
+  document.getElementById('customer-search').addEventListener('input', filterCustomers);
+  document.getElementById('tag-filter').addEventListener('change', filterCustomers);
+
+  function filterCustomers() {
+    const search = document.getElementById('customer-search').value.toLowerCase();
+    const tag = document.getElementById('tag-filter').value;
+    let filtered = allCustomers;
+    if (search) filtered = filtered.filter(c => c.name.toLowerCase().includes(search));
+    if (tag) filtered = filtered.filter(c => c.tag === tag);
+    renderCustomers(filtered);
+  }
+
+  // Add customer modal
+  const modal = document.getElementById('add-modal');
+  document.getElementById('add-customer-btn').addEventListener('click', () => modal.classList.add('open'));
+  document.getElementById('modal-cancel').addEventListener('click', () => modal.classList.remove('open'));
+
+  // Auto-fill gmail when tag changes
+  document.getElementById('new-tag').addEventListener('change', async () => {
+    const tag = document.getElementById('new-tag').value;
+    const customers = await fetch(`/api/customers?tag=${encodeURIComponent(tag)}`).then(r => r.json());
+    if (customers.length > 0) {
+      document.getElementById('new-gmail').value = customers[0].gmail;
+    }
+  });
+
+  document.getElementById('modal-save').addEventListener('click', async () => {
+    const name = document.getElementById('new-name').value.trim();
+    const tag = document.getElementById('new-tag').value;
+    const gmail = document.getElementById('new-gmail').value.trim();
+    if (!name || !tag) return alert('Name and tag are required.');
+
+    await fetch('/api/customers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, tag, gmail })
+    });
+    modal.classList.remove('open');
+    document.getElementById('new-name').value = '';
+    allCustomers = [];
+    allTags = [];
+    document.getElementById('tag-filter').innerHTML = '<option value="">All Tags</option>';
+    document.getElementById('new-tag').innerHTML = '';
+    loadCustomers();
+  });
+
+  // ---- ACTIVITY ----
+  async function loadActivity() {
+    const log = await fetch('/api/verify-log').then(r => r.json());
+    const container = document.getElementById('activity-list');
+    if (log.length === 0) {
+      container.innerHTML = `<div class="empty-state"><div class="emoji">📭</div>No activity yet. Verification attempts will appear here.</div>`;
+      return;
+    }
+    container.innerHTML = log.map(entry => `
+      <div class="log-entry ${entry.found ? 'found' : 'not-found'}">
+        <div class="status-dot"></div>
+        <div class="info">
+          <div class="name">${entry.submittedName} ${entry.found ? tagBadge(entry.tag) : '<span style="color:#ef4444;font-size:12px;">Not found</span>'}</div>
+          <div class="meta">${entry.found ? entry.gmail : 'Customer not in system'} · ${new Date(entry.timestamp).toLocaleString()}</div>
+        </div>
+        <div class="code-badge">${entry.code}</div>
+        <div class="time">${timeAgo(entry.timestamp)}</div>
+      </div>
+    `).join('');
+  }
+
+  // ---- ENROLLMENTS ----
+  async function loadEnrollments() {
+    const enrollments = await fetch('/api/enrollments').then(r => r.json());
+    const container = document.getElementById('enrollment-list');
+    if (enrollments.length === 0) {
+      container.innerHTML = `<div class="empty-state"><div class="emoji">📝</div>No enrollment requests yet.</div>`;
+      return;
+    }
+    container.innerHTML = enrollments.map(e => `
+      <div class="enroll-card" id="enroll-${e.id}">
+        <div class="info">
+          <div class="enroll-name">${e.name}</div>
+          <div class="enroll-meta">
+            ${e.phone ? '📞 ' + e.phone + ' &nbsp;' : ''}
+            ${e.address ? '📍 ' + e.address + ' &nbsp;' : ''}
+            🕐 ${new Date(e.timestamp).toLocaleString()}
+          </div>
+        </div>
+        <span class="status-badge ${e.status}">${e.status.charAt(0).toUpperCase() + e.status.slice(1)}</span>
+        <div class="action-btns">
+          ${e.status === 'pending' ? `<button class="btn-sm btn-contact" onclick="updateEnroll(${e.id},'contacted')">Mark Contacted</button>` : ''}
+          ${e.status !== 'enrolled' ? `<button class="btn-sm btn-enrolled" onclick="updateEnroll(${e.id},'enrolled')">Mark Enrolled</button>` : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function updateEnroll(id, status) {
+    await fetch(`/api/enrollments/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    loadEnrollments();
+  }
+
+  // Init
+  loadOverview();
+</script>
+</body>
+</html>

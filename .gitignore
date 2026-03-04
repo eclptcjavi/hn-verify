@@ -1,0 +1,4 @@
+node_modules/
+.env
+verification_log.json
+enrollment_requests.json

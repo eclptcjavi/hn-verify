@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HorizonNet – Dashboard Login</title>
+  <link rel="icon" type="image/png" href="/site-icon.png" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0f172a;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .logo h1 { font-size: 22px; font-weight: 700; color: #f1f5f9; }
+    .logo p { color: #64748b; font-size: 13px; margin-top: 6px; }
+
+    label { display: block; font-size: 13px; font-weight: 600; color: #94a3b8; margin-bottom: 6px; }
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      background: #0f172a;
+      border: 1.5px solid #334155;
+      border-radius: 8px;
+      font-size: 15px;
+      color: #f1f5f9;
+      margin-bottom: 20px;
+      transition: border-color 0.2s;
+    }
+    input:focus { outline: none; border-color: #3b82f6; }
+
+    button {
+      width: 100%;
+      padding: 13px;
+      background: #e8610a;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover { background: #c9520a; }
+    button:disabled { background: #7a3a10; cursor: not-allowed; }
+
+    .error {
+      background: #450a0a;
+      border: 1px solid #dc2626;
+      color: #fca5a5;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 13px;
+      margin-top: 16px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <img src="/horizon-net-logo.png" alt="HorizonNet" style="max-width:220px;width:100%;margin-bottom:14px;" />
+      <p>Admin Dashboard</p>
+    </div>
+    <form id="login-form">
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="Enter your password" required autofocus />
+      <button type="submit" id="btn">Sign In</button>
+      <div class="error" id="error-msg">Incorrect password. Please try again.</div>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn');
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+      document.getElementById('error-msg').style.display = 'none';
+
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: document.getElementById('password').value })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        window.location.href = '/dashboard';
+      } else {
+        document.getElementById('error-msg').style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+    });
+  </script>
+</body>
+</html>

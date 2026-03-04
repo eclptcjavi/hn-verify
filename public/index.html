@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HorizonNet – Customer Verification</title>
+  <link rel="icon" type="image/png" href="/site-icon.png" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #111111;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .card {
+      background: #1a1a1a;
+      border-radius: 16px;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.5);
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 460px;
+      border: 1px solid #2a2a2a;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .logo p {
+      color: #999;
+      font-size: 14px;
+      margin-top: 6px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #ccc;
+      margin-bottom: 6px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #333;
+      border-radius: 8px;
+      font-size: 15px;
+      color: #f1f1f1;
+      background: #111;
+      transition: border-color 0.2s;
+      margin-bottom: 18px;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #e8610a;
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 13px;
+      background: #e8610a;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button[type="submit"]:hover { background: #c9520a; }
+    button[type="submit"]:disabled { background: #7a3a10; cursor: not-allowed; }
+
+    /* Result states */
+    .result { display: none; margin-top: 24px; border-radius: 10px; padding: 20px 24px; }
+    .result.success { background: #f0fdf4; border: 1.5px solid #86efac; }
+    .result.error { background: #fef2f2; border: 1.5px solid #fca5a5; }
+    .result.not-found { background: #fffbeb; border: 1.5px solid #fcd34d; }
+
+    .result h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .result.success h3 { color: #166534; }
+    .result.error h3 { color: #991b1b; }
+    .result.not-found h3 { color: #92400e; }
+    .result p { font-size: 14px; color: #4b5563; line-height: 1.5; }
+
+    .divider { border: none; border-top: 1px solid #2a2a2a; margin: 24px 0; }
+
+    #enroll-section h3 { font-size: 16px; font-weight: 700; color: #f1f1f1; margin-bottom: 6px; }
+    #enroll-section p { font-size: 13px; color: #999; margin-bottom: 18px; }
+
+    .enroll-btn {
+      width: 100%;
+      padding: 11px;
+      background: #e8610a;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .enroll-btn:hover { background: #c9520a; }
+
+    .back-link {
+      text-align: center;
+      margin-top: 18px;
+      font-size: 13px;
+      color: #777;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid white;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <img src="/horizon-net-logo.png" alt="HorizonNet" style="max-width:260px;width:100%;margin-bottom:16px;" />
+      <p>Enter your name and the code shown on your screen</p>
+    </div>
+
+    <!-- Verify Form -->
+    <div id="verify-section">
+      <form id="verify-form">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" placeholder="e.g. John Smith" autocomplete="name" required />
+
+        <label for="code">Verification Code</label>
+        <input type="text" id="code" placeholder="Enter the code from your screen" required />
+
+        <button type="submit" id="submit-btn">Submit</button>
+      </form>
+
+      <div class="result success" id="result-success">
+        <h3>✅ You're verified!</h3>
+        <p>Your information has been received. You'll be logged in shortly — you can close this page.</p>
+      </div>
+
+      <div class="result error" id="result-error">
+        <h3>⚠️ Something went wrong</h3>
+        <p>Please check that all fields are filled in and try again.</p>
+      </div>
+
+      <div class="result not-found" id="result-not-found">
+        <h3>⚠️ We couldn't find your account</h3>
+        <p>Please double-check your name is spelled correctly. If you're not yet enrolled in this service, you can request enrollment below.</p>
+      </div>
+    </div>
+
+    <!-- Enrollment Section -->
+    <div id="enroll-section">
+      <hr class="divider" />
+      <h3>Not enrolled yet?</h3>
+      <p>Fill out this short form and we'll reach out to get you set up.</p>
+
+      <form id="enroll-form">
+        <label for="enroll-name">Full Name</label>
+        <input type="text" id="enroll-name" placeholder="Your full name" required />
+
+        <label for="enroll-phone">Phone Number</label>
+        <input type="tel" id="enroll-phone" placeholder="(555) 000-0000" />
+
+        <label for="enroll-address">Service Address</label>
+        <input type="text" id="enroll-address" placeholder="123 Main St, City, OK" />
+
+        <button type="submit" class="enroll-btn" id="enroll-btn">Request Enrollment</button>
+      </form>
+
+      <div class="result success" id="enroll-success" style="margin-top:16px;">
+        <h3>✅ Request received!</h3>
+        <p>We'll contact you soon to complete your enrollment.</p>
+      </div>
+
+      <p class="back-link" id="back-link">← Back to verification</p>
+    </div>
+  </div>
+
+  <script>
+    const verifyForm = document.getElementById('verify-form');
+    const enrollSection = document.getElementById('enroll-section');
+    const verifySection = document.getElementById('verify-section');
+
+    verifyForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Verifying...';
+
+      document.getElementById('result-success').style.display = 'none';
+      document.getElementById('result-error').style.display = 'none';
+      document.getElementById('result-not-found').style.display = 'none';
+
+      const name = document.getElementById('name').value;
+      const code = document.getElementById('code').value;
+
+      try {
+        const res = await fetch('/api/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, code })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          document.getElementById('result-success').style.display = 'block';
+          verifyForm.reset();
+        } else if (data.error === 'not_found') {
+          document.getElementById('result-not-found').style.display = 'block';
+          // Pre-fill enrollment name
+          document.getElementById('enroll-name').value = name;
+          enrollSection.style.display = 'block';
+        } else {
+          document.getElementById('result-error').style.display = 'block';
+        }
+      } catch {
+        document.getElementById('result-error').style.display = 'block';
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = 'Submit';
+    });
+
+    document.getElementById('enroll-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('enroll-btn');
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+
+      const res = await fetch('/api/enroll', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: document.getElementById('enroll-name').value,
+          phone: document.getElementById('enroll-phone').value,
+          address: document.getElementById('enroll-address').value
+        })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        document.getElementById('enroll-form').style.display = 'none';
+        document.getElementById('enroll-success').style.display = 'block';
+      }
+      btn.disabled = false;
+      btn.textContent = 'Request Enrollment';
+    });
+
+    document.getElementById('back-link').addEventListener('click', () => {
+      enrollSection.style.display = 'none';
+      document.getElementById('result-not-found').style.display = 'none';
+    });
+  </script>
+</body>
+</html>
