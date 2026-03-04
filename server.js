@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
+const rateLimit = require('express-rate-limit');
 const twilio = require('twilio');
 const path = require('path');
 const fs = require('fs');
@@ -42,6 +43,15 @@ function requireAuth(req, res, next) {
   if (req.session && req.session.authenticated) return next();
   res.redirect('/login');
 }
+
+// Rate limit login attempts (5 per 15 min per IP)
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { success: false, error: 'Too many attempts. Try again in 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
 
 // ─── PUBLIC ROUTES ─────────────────────────────────────────────────────────
 
@@ -131,13 +141,18 @@ app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-app.post('/api/login', (req, res) => {
-  const { password } = req.body;
-  if (password === process.env.DASHBOARD_PASSWORD) {
+app.post('/api/login', loginLimiter, (req, res) => {
+  const { password, backupCode } = req.body;
+  const backupRequired = !!process.env.DASHBOARD_BACKUP_CODE;
+
+  const passwordOk = password === process.env.DASHBOARD_PASSWORD;
+  const backupOk = !backupRequired || backupCode === process.env.DASHBOARD_BACKUP_CODE;
+
+  if (passwordOk && backupOk) {
     req.session.authenticated = true;
     res.json({ success: true });
   } else {
-    res.json({ success: false, error: 'Invalid password' });
+    res.json({ success: false, error: 'Invalid password' + (backupRequired ? ' or backup code' : '') });
   }
 });
 

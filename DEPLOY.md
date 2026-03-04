@@ -45,6 +45,7 @@
    | `TWILIO_TO_NUMBER` | e.g. `+15805714022` |
    | `DASHBOARD_PASSWORD` | Password for `/dashboard` and `/login` |
    | `SESSION_SECRET` | Long random string (e.g. 32+ chars) |
+   | `DASHBOARD_BACKUP_CODE` | Optional. If set, login requires password + this code (second factor). |
 
    **Do not** set `PORT` — Railway sets it automatically.
 

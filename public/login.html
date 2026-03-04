@@ -81,8 +81,11 @@
     <form id="login-form">
       <label for="password">Password</label>
       <input type="password" id="password" placeholder="Enter your password" required autofocus />
+      <label for="backup-code">Backup code <span style="color:#64748b;font-weight:400">(if enabled)</span></label>
+      <input type="password" id="backup-code" placeholder="Optional backup code" autocomplete="one-time-code" />
       <button type="submit" id="btn">Sign In</button>
       <div class="error" id="error-msg">Incorrect password. Please try again.</div>
+      <div class="error" id="rate-limit-msg" style="display:none;">Too many attempts. Try again in 15 minutes.</div>
     </form>
   </div>
 
@@ -97,14 +100,24 @@
       const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: document.getElementById('password').value })
+        body: JSON.stringify({
+          password: document.getElementById('password').value,
+          backupCode: document.getElementById('backup-code').value.trim()
+        })
       });
       const data = await res.json();
 
       if (data.success) {
         window.location.href = '/dashboard';
       } else {
-        document.getElementById('error-msg').style.display = 'block';
+        document.getElementById('error-msg').style.display = 'none';
+        document.getElementById('rate-limit-msg').style.display = 'none';
+        if (data.error && data.error.includes('15 minutes')) {
+          document.getElementById('rate-limit-msg').style.display = 'block';
+        } else {
+          document.getElementById('error-msg').textContent = data.error || 'Incorrect password. Please try again.';
+          document.getElementById('error-msg').style.display = 'block';
+        }
         btn.disabled = false;
         btn.textContent = 'Sign In';
       }
