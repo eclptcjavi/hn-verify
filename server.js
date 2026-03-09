@@ -214,6 +214,18 @@ app.post('/api/customers', requireAuth, (req, res) => {
   res.json({ success: true });
 });
 
+// Remove customer manually (by name, case-insensitive)
+app.delete('/api/customers', requireAuth, (req, res) => {
+  const { name } = req.body;
+  if (!name || typeof name !== 'string') return res.json({ success: false, error: 'missing_name' });
+  const nameTrimmed = name.trim().toLowerCase();
+  const idx = customers.findIndex(c => c.name.toLowerCase() === nameTrimmed);
+  if (idx === -1) return res.json({ success: false, error: 'not_found' });
+  customers.splice(idx, 1);
+  saveJSON(path.join(__dirname, 'customers_data.json'), customers);
+  res.json({ success: true });
+});
+
 app.listen(PORT, () => {
   console.log(`✅ HN Verify app running at http://localhost:${PORT}`);
   console.log(`   Public page:  http://localhost:${PORT}/`);

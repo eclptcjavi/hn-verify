@@ -250,6 +250,8 @@
     }
     .btn-contact { background: #1e3a5f; color: #60a5fa; }
     .btn-enrolled { background: #14532d; color: #86efac; }
+    .btn-remove { padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; background: #7f1d1d; color: #fecaca; }
+    .btn-remove:hover { background: #991b1b; color: #fff; }
 
     /* Add customer modal */
     .modal-overlay {
@@ -373,6 +375,7 @@
             <th>Customer Name</th>
             <th>Tag</th>
             <th>Gmail Account</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody id="customers-tbody"></tbody>
@@ -528,7 +531,7 @@
   function renderCustomers(list) {
     const tbody = document.getElementById('customers-tbody');
     if (list.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:32px;color:#475569;">No customers found.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:#475569;">No customers found.</td></tr>`;
       document.getElementById('customer-count').textContent = '';
       return;
     }
@@ -538,9 +541,35 @@
         <td style="font-weight:600;color:#f1f5f9">${c.name}</td>
         <td>${tagBadge(c.tag)}</td>
         <td style="color:#60a5fa">${c.gmail}</td>
+        <td>
+          <button type="button" class="btn-remove" data-customer-name="${escapeAttr(c.name)}" title="Remove customer">Remove</button>
+        </td>
       </tr>
     `).join('');
     document.getElementById('customer-count').textContent = `Showing ${list.length} of ${allCustomers.length} customers`;
+    tbody.querySelectorAll('.btn-remove').forEach(btn => {
+      btn.addEventListener('click', () => removeCustomer(btn.dataset.customerName));
+    });
+  }
+
+  function escapeAttr(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  async function removeCustomer(name) {
+    if (!confirm(`Remove customer "${name}"? This cannot be undone.`)) return;
+    const res = await fetch('/api/customers', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      alert(data.error === 'not_found' ? 'Customer not found.' : 'Could not remove customer.');
+      return;
+    }
+    allCustomers = await fetch('/api/customers').then(r => r.json());
+    filterCustomers();
   }
 
   document.getElementById('customer-search').addEventListener('input', filterCustomers);
